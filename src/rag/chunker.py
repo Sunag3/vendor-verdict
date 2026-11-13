@@ -2,7 +2,7 @@
 
 import hashlib
 from src.models.chunk import EvidenceChunk
-from rag.text_cleaner import split_paragraphs, clean_text
+from src.rag.text_cleaner import split_paragraphs, clean_text
 from src.models.evidence import ValidatedEvidencePage
 
 
@@ -157,12 +157,7 @@ class EvidenceChunker:
                             )
                         }
                     )
-                    overlap = (
-                        current_words[-self.overlap_words:] if self.overlap_words else []
-                    )
-                    current_words = list(overlap)
-
-                    chunk_start_word = global_word_position - len(overlap)
+                    current_words = []
                 
                 local_start = 0
                 while local_start < len(paragraph_words):
@@ -184,6 +179,7 @@ class EvidenceChunker:
                     local_start = local_end - self.overlap_words
 
                 global_word_position += len(paragraph_words)
+                chunk_start_word = global_word_position
                 continue
 
             projected_size = (
