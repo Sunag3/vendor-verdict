@@ -198,6 +198,14 @@ class EvidenceChunker:
                 overlap = (
                     current_words[-self.overlap_words:] if self.overlap_words else []
                 )
+                # Do not let overlap make the next
+                # chunk exceeds max_words due to overlap, adjust accordingly
+                if (
+                    len(overlap)
+                    + len(paragraph_words) > self.max_words
+                ):
+                    overlap = []
+
                 current_words = list(overlap)
 
                 chunk_start_word = global_word_position - len(overlap)
