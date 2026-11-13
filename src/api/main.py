@@ -4,6 +4,10 @@ from src.config.settings import settings
 from src.loaders.dataset_loader import VendorVerdictDataset
 from src.services.case_service import CaseService
 
+# Register validation service
+from src.api.routes.evidence import router as evidence_router, set_validation_service
+from src.services.validation_service import ValidationService
+
 
 dataset = VendorVerdictDataset().load()
 case_service = CaseService(dataset=dataset)
@@ -43,3 +47,7 @@ def stats():
 def requirements():
     return case_service.get_requirements()
 
+
+validation_service = ValidationService(dataset=dataset)
+set_validation_service(validation_service)
+app.include_router(evidence_router)
