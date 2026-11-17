@@ -45,7 +45,7 @@ class EvidenceChunker:
 
         total_chunks = len(raw_chunks)
 
-        chunks = []
+        chunks: list[EvidenceChunk] = []
 
         for index, item in enumerate(raw_chunks):
             chunk_text = item["text"]
@@ -68,7 +68,7 @@ class EvidenceChunker:
                     source_type=page.source_type,
                     publisher=page.publisher,
                     published_date=page.published_date,
-                    last_updated=page.last_updated,
+                    last_updated=page.last_updated_date,
                     source_category=validation.source_category,
                     official_domain_match=validation.official_domain_match,
                     legal_entity_match=validation.legal_entity_match,

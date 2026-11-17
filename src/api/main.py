@@ -8,6 +8,9 @@ from src.services.case_service import CaseService
 from src.api.routes.evidence import router as evidence_router, set_validation_service
 from src.services.validation_service import ValidationService
 
+# Register chunking service
+from src.api.routes.chunks import router as chunks_router, set_chunking_service
+from src.services.chunking_service import ChunkingService
 
 dataset = VendorVerdictDataset().load()
 case_service = CaseService(dataset=dataset)
@@ -51,3 +54,11 @@ def requirements():
 validation_service = ValidationService(dataset=dataset)
 set_validation_service(validation_service)
 app.include_router(evidence_router)
+
+
+chunking_service = ChunkingService(
+    dataset=dataset,
+    validation_service=validation_service
+)
+set_chunking_service(chunking_service)
+app.include_router(chunks_router)

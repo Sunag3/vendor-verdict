@@ -33,7 +33,7 @@ class EvidenceChunk(BaseModel):
     certificate_registry_match: bool
 
     trusted_source: bool
-    usabled_evidence: bool
+    usable_evidence: bool
 
     trust_level: str
 

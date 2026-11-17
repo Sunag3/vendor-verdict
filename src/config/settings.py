@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     app_env: str = "development"
 
     data_dir: str = "data"
-    output_dir: str = "outputs"
+    output_path: str = "outputs"
 
     as_of_date: date = date(2026, 11, 1)
 
@@ -28,6 +28,10 @@ class Settings(BaseSettings):
     @property
     def data_path(self) -> Path:
         return self.base_dir / self.data_dir
+
+    @property
+    def output_dir_path(self) -> Path:
+        return self.base_dir / self.output_path
 
     @property
     def cases_file(self) -> Path:
