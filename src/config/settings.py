@@ -1,6 +1,6 @@
 from datetime import date
 from pathlib import Path
-
+from typing import Optional
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -15,6 +15,10 @@ class Settings(BaseSettings):
 
     as_of_date: date = date(2026, 11, 1)
 
+    openai_api_key: Optional[str] = None
+    openai_embedding_model: str = "text-embedding-3-small"
+    chroma_path: str = "chroma"
+    chroma_collection: str = "vendor_verdict_evidence"
     model_config = SettingsConfigDict(
         env_file=".env",
         env_file_encoding="utf-8",
@@ -64,5 +68,9 @@ class Settings(BaseSettings):
     @property
     def metrics_file(self) -> Path:
         return self.data_path / "metrics.py"
+
+    @property
+    def chroma_db_path(self) -> Path:
+        return self.base_dir / self.chroma_path
 
 settings = Settings()
