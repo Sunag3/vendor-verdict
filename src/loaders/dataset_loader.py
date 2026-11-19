@@ -206,3 +206,14 @@ class VendorVerdictDataset:
             "cases_without_pages": sorted(cases_without_pages),
             "duplicate_case_ids": sorted(duplicate_case_ids)
         }
+
+
+    def get_requirement(
+            self,
+            requirement_id: str
+    ) -> dict:
+        for requirement in self.requirements:
+            if requirement.get("id") == requirement_id:
+                return requirement
+
+        raise ValueError(f"Requirement with ID '{requirement_id}' not found.")

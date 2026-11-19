@@ -20,6 +20,10 @@ from src.services.indexing_service import IndexingService
 from src.api.routes.indexing import router as indexing_router, set_indexing_service
 from src.api.routes.search import router as search_router, set_retriever
 
+# Register retrieval service
+from src.rag.requirment_retriever import RequirementRetriever
+from src.services.retrieval_service import RetrievalService
+from src.api.routes.retrieval import router as retrieval_router, set_retrieval_service
 
 
 dataset = VendorVerdictDataset().load()
@@ -96,3 +100,20 @@ set_retriever(retriever)
 
 app.include_router(indexing_router)
 app.include_router(search_router)
+
+
+# Register retrieval service
+
+requirement_retriever = RequirementRetriever(
+    dataset=dataset,
+    retriever=retriever
+)
+
+
+retrieval_service = RetrievalService(
+    requirement_retriever=requirement_retriever
+)
+
+
+set_retrieval_service(retrieval_service)
+app.include_router(retrieval_router)
