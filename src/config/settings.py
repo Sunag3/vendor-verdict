@@ -24,6 +24,10 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+    # AWS / BEDROCk
+
+    aws_region: str = "us-east-1"
+    bedrock_model_id: str
 
     @property
     def base_dir(self) -> Path:

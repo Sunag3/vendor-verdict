@@ -25,6 +25,12 @@ from src.rag.requirment_retriever import RequirementRetriever
 from src.services.retrieval_service import RetrievalService
 from src.api.routes.retrieval import router as retrieval_router, set_retrieval_service
 
+# Register extraction service
+from src.api.routes.extraction import router as extraction_router, set_extraction_service
+from src.services.fact_extraction_service import FactExtractionService
+from src.agents.fact_extraction_agent import FactExtractionAgent
+
+
 
 dataset = VendorVerdictDataset().load()
 case_service = CaseService(dataset=dataset)
@@ -117,3 +123,13 @@ retrieval_service = RetrievalService(
 
 set_retrieval_service(retrieval_service)
 app.include_router(retrieval_router)
+
+
+# Register extraction service
+fact_extraction_agent = FactExtractionAgent()
+fact_extraction_service = FactExtractionService(
+    retrieval_service=retrieval_service,
+    extraction_agent=fact_extraction_agent
+)
+set_extraction_service(fact_extraction_service)
+app.include_router(extraction_router)
