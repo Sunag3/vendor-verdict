@@ -35,6 +35,13 @@ from src.api.routes.resolution import router as resolution_router, set_resolutio
 from src.services.resolution_service import ResolutionService
 from src.resolvers.conflict_resolver import ConflictResolver
 
+# Register policy evaluation service
+from src.policy.rules_adapter import RulesAdapter
+from src.api.routes.evaluation import router as evaluation_router, set_evaluation_service
+from src.services.policy_evaluation_service import PolicyEvaluationService
+
+
+
 dataset = VendorVerdictDataset().load()
 case_service = CaseService(dataset=dataset)
 set_case_service(case_service)
@@ -146,3 +153,18 @@ resolution_service = ResolutionService(
 )
 set_resolution_service(resolution_service)
 app.include_router(resolution_router)
+
+
+
+rules_adapter = RulesAdapter(
+    as_of_date=settings.as_of_date
+)
+
+
+policy_evaluation_service = PolicyEvaluationService(
+    dataset=dataset,
+    resolution_service=resolution_service,
+    rules_adapter=rules_adapter
+)
+set_evaluation_service(policy_evaluation_service)
+app.include_router(evaluation_router)
