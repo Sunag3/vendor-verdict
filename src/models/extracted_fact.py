@@ -18,6 +18,35 @@ class EvidenceReference(BaseModel):
 
     )
 
+
+class FactCandidate(BaseModel):
+    """
+    One factual value extracted from one source/chunk.
+
+    Simple fields:
+        value is poulated.
+    
+    Complex fields:
+        record is populated.
+    """
+
+    page_id: str
+    chunk_id: str
+
+    last_updated: str | None = None
+
+    value: (
+        str
+        | int
+        | float
+        | bool
+        | list[str]
+        | None
+    ) = None
+
+    record: dict[str, Any] | None = None
+
+
 class ExtractedFact(BaseModel):
 
     field_name: str = Field(
@@ -57,4 +86,16 @@ class ExtractedFact(BaseModel):
         default_factory=list
     )
 
+
+    # STEP 7 add candidates
+
+    candidates: list[
+        FactCandidate
+    ] = Field(
+        default_factory=list,
+        description="List of candidate facts extracted from various sources/chunks."
+    )
+
     notes: str | None = None
+
+

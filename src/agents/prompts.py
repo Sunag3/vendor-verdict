@@ -86,4 +86,30 @@ If the requested fact is not explicitly established by the supplied evidence:
 missing=true
 
 Return the requested structured extraction
+
+IMPORTANT CANDIDATE OUTPUT RULE:
+
+For every explicit factual statement that may establish
+the requested field, add an item to candidates.
+
+For simple fields populate:
+
+- page_id
+- chunk_id
+- last_updated
+- value
+
+For complex fields populate:
+
+- page_id
+- chunk_id
+- last_updated
+- record
+
+Do not resolve conflicting candidates.
+
+If two pages state different values, return BOTH candidates.
+
+The determistic resolver will decide which source wins
+using last_updated timestamps.
 """

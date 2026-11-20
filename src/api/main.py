@@ -30,7 +30,10 @@ from src.api.routes.extraction import router as extraction_router, set_extractio
 from src.services.fact_extraction_service import FactExtractionService
 from src.agents.fact_extraction_agent import FactExtractionAgent
 
-
+# Register resolution service
+from src.api.routes.resolution import router as resolution_router, set_resolution_service
+from src.services.resolution_service import ResolutionService
+from src.resolvers.conflict_resolver import ConflictResolver
 
 dataset = VendorVerdictDataset().load()
 case_service = CaseService(dataset=dataset)
@@ -133,3 +136,13 @@ fact_extraction_service = FactExtractionService(
 )
 set_extraction_service(fact_extraction_service)
 app.include_router(extraction_router)
+
+
+# Include resolution router
+conflict_resolver = ConflictResolver(as_of_date=settings.as_of_date)
+resolution_service = ResolutionService(
+    extraction_service=fact_extraction_service,
+    resolver=conflict_resolver
+)
+set_resolution_service(resolution_service)
+app.include_router(resolution_router)
