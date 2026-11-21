@@ -1,0 +1,430 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vendor Verdict — Pipeline</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: #0f1117;
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 32px 24px;
+  }
+
+  .card {
+    background: #161b27;
+    border: 1px solid #2a3245;
+    border-radius: 20px;
+    padding: 40px 48px 48px;
+    width: 900px;
+    box-shadow: 0 24px 80px rgba(0,0,0,0.6);
+  }
+
+  .header {
+    margin-bottom: 36px;
+    text-align: center;
+  }
+  .header h1 {
+    font-size: 22px;
+    font-weight: 700;
+    color: #e8edf5;
+    letter-spacing: -0.3px;
+  }
+  .header p {
+    font-size: 13px;
+    color: #6b7a99;
+    margin-top: 6px;
+  }
+
+  /* ── Legend ── */
+  .legend {
+    display: flex;
+    justify-content: center;
+    gap: 24px;
+    margin-bottom: 32px;
+  }
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    color: #8a94aa;
+  }
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 3px;
+  }
+
+  /* ── Pipeline ── */
+  .pipeline {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+  }
+
+  /* vertical connector line */
+  .connector {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    height: 28px;
+    position: relative;
+  }
+  .connector::before {
+    content: '';
+    width: 2px;
+    height: 100%;
+    background: linear-gradient(to bottom, #2a3245, #3a4560);
+  }
+  .connector-arrow {
+    position: absolute;
+    color: #3a4560;
+    font-size: 14px;
+    bottom: -2px;
+  }
+
+  /* split connector */
+  .connector-split {
+    display: flex;
+    align-items: flex-start;
+    justify-content: center;
+    height: 28px;
+    position: relative;
+    gap: 0;
+  }
+
+  /* ── Stage boxes ── */
+  .stage {
+    display: flex;
+    align-items: stretch;
+    gap: 16px;
+    border-radius: 12px;
+    padding: 16px 20px;
+    border: 1px solid transparent;
+    cursor: default;
+    transition: transform 0.15s, box-shadow 0.15s;
+    position: relative;
+  }
+  .stage:hover {
+    transform: translateX(4px);
+    box-shadow: -4px 0 20px rgba(0,0,0,0.4);
+  }
+
+  .stage-icon {
+    width: 40px;
+    min-width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .stage-body {
+    flex: 1;
+  }
+  .stage-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #dde4f0;
+    margin-bottom: 3px;
+  }
+  .stage-desc {
+    font-size: 12px;
+    color: #6b7a99;
+    line-height: 1.5;
+  }
+
+  .stage-badge {
+    align-self: center;
+    font-size: 11px;
+    font-weight: 600;
+    padding: 3px 10px;
+    border-radius: 20px;
+    white-space: nowrap;
+    letter-spacing: 0.3px;
+  }
+
+  /* Color themes */
+  .theme-input {
+    background: #1a2035;
+    border-color: #2a3860;
+  }
+  .theme-input .stage-icon  { background: #1e2d50; }
+  .theme-input .stage-badge { background: #1e2d50; color: #6e8fd4; }
+
+  .theme-rag {
+    background: #0f1e38;
+    border-color: #1e3a6e;
+  }
+  .theme-rag .stage-icon  { background: #163058; }
+  .theme-rag .stage-badge { background: #163058; color: #4d8ff5; }
+
+  .theme-ai {
+    background: #1e1430;
+    border-color: #3d2460;
+  }
+  .theme-ai .stage-icon  { background: #2d1848; }
+  .theme-ai .stage-badge { background: #2d1848; color: #c084fc; }
+
+  .theme-deterministic {
+    background: #0d1f1a;
+    border-color: #1a3d30;
+  }
+  .theme-deterministic .stage-icon  { background: #122d22; }
+  .theme-deterministic .stage-badge { background: #122d22; color: #34d399; }
+
+  .theme-output {
+    background: #1a1a0e;
+    border-color: #3d3a14;
+  }
+  .theme-output .stage-icon  { background: #2d2a0f; }
+  .theme-output .stage-badge { background: #2d2a0f; color: #fbbf24; }
+
+  /* side label */
+  .side-note {
+    position: absolute;
+    right: -130px;
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 11px;
+    color: #c0392b;
+    background: #2a1518;
+    border: 1px solid #4a2020;
+    border-radius: 6px;
+    padding: 4px 10px;
+    white-space: nowrap;
+  }
+  .side-note::before {
+    content: '✗ ';
+  }
+
+  /* ── Row layout for split stages ── */
+  .row-two {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+  }
+
+  /* ── Stats row ── */
+  .stats {
+    display: flex;
+    justify-content: center;
+    gap: 32px;
+    margin-top: 32px;
+    padding-top: 24px;
+    border-top: 1px solid #2a3245;
+  }
+  .stat { text-align: center; }
+  .stat-value {
+    font-size: 22px;
+    font-weight: 700;
+    color: #e8edf5;
+  }
+  .stat-label {
+    font-size: 11px;
+    color: #6b7a99;
+    margin-top: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* tooltip */
+  .stage[data-tip]:hover::after {
+    content: attr(data-tip);
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: #1e2535;
+    border: 1px solid #3a4560;
+    border-radius: 8px;
+    padding: 8px 12px;
+    font-size: 12px;
+    color: #c8d4e8;
+    white-space: nowrap;
+    z-index: 10;
+    pointer-events: none;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+  }
+</style>
+</head>
+<body>
+
+<div class="card">
+  <div class="header">
+    <h1>Vendor Verdict — AI Security Review Pipeline</h1>
+    <p>End-to-end RAG pipeline for vendor compliance evaluation · Kaggle Competition</p>
+  </div>
+
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#4d8ff5"></div>
+      RAG / Retrieval
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#c084fc"></div>
+      LLM / Bedrock
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#34d399"></div>
+      Deterministic Rules
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:#fbbf24"></div>
+      Output
+    </div>
+  </div>
+
+  <div class="pipeline">
+
+    <!-- INPUT -->
+    <div class="stage theme-input"
+         data-tip="cases.csv · pages.jsonl · requirements.json">
+      <div class="stage-icon">📂</div>
+      <div class="stage-body">
+        <div class="stage-title">Raw Data</div>
+        <div class="stage-desc">700 cases · ~7,000 web pages · 10 policy requirements</div>
+      </div>
+      <div class="stage-badge">INPUT</div>
+    </div>
+
+    <div class="connector"><div class="connector-arrow">▼</div></div>
+
+    <!-- TRUST FILTER -->
+    <div class="stage theme-rag"
+         data-tip="official_domain_match · legal_entity_match · injection_scan">
+      <div class="stage-icon">🛡️</div>
+      <div class="stage-body">
+        <div class="stage-title">Trust Filter</div>
+        <div class="stage-desc">Keep only official domain pages + certificate registries. Discard blogs, reviews, forums, injected pages.</div>
+      </div>
+      <div class="stage-badge" style="color:#ef4444;background:#2a1518">FILTER</div>
+      <div class="side-note">blogs · reviews · forums</div>
+    </div>
+
+    <div class="connector"><div class="connector-arrow">▼</div></div>
+
+    <!-- CHUNK -->
+    <div class="stage theme-rag"
+         data-tip="350-word chunks · 40-word overlap · paragraph-aware">
+      <div class="stage-icon">✂️</div>
+      <div class="stage-body">
+        <div class="stage-title">Evidence Chunker</div>
+        <div class="stage-desc">Paragraph-aware splitting into 350-word overlapping chunks with full page provenance</div>
+      </div>
+      <div class="stage-badge">RAG</div>
+    </div>
+
+    <div class="connector"><div class="connector-arrow">▼</div></div>
+
+    <!-- EMBED + INDEX -->
+    <div class="stage theme-rag"
+         data-tip="text-embedding-3-small · 1536 dims · cosine distance">
+      <div class="stage-icon">🗄️</div>
+      <div class="stage-body">
+        <div class="stage-title">Embed &amp; Index</div>
+        <div class="stage-desc">OpenAI text-embedding-3-small → <strong style="color:#4d8ff5">ChromaDB</strong> · 5,020 vectors · run once</div>
+      </div>
+      <div class="stage-badge">RAG</div>
+    </div>
+
+    <div class="connector"><div class="connector-arrow">▼</div></div>
+
+    <!-- RETRIEVE -->
+    <div class="stage theme-rag"
+         data-tip="per-requirement semantic search · top-k=8 · deduplication">
+      <div class="stage-icon">🔍</div>
+      <div class="stage-body">
+        <div class="stage-title">Requirement Retrieval</div>
+        <div class="stage-desc">Embed requirement title → semantic search per requirement → deduplicate chunks</div>
+      </div>
+      <div class="stage-badge">RAG</div>
+    </div>
+
+    <div class="connector"><div class="connector-arrow">▼</div></div>
+
+    <!-- EXTRACT -->
+    <div class="stage theme-ai"
+         data-tip="Claude Sonnet on AWS Bedrock · structured_output · injection-hardened">
+      <div class="stage-icon">🤖</div>
+      <div class="stage-body">
+        <div class="stage-title">Fact Extraction</div>
+        <div class="stage-desc"><strong style="color:#c084fc">AWS Bedrock · Claude Sonnet</strong> · structured JSON output · injection-hardened system prompt · candidate tracking per source</div>
+      </div>
+      <div class="stage-badge">LLM</div>
+    </div>
+
+    <div class="connector"><div class="connector-arrow">▼</div></div>
+
+    <!-- RESOLVE -->
+    <div class="stage theme-deterministic"
+         data-tip="newest last_updated date wins · no LLM guessing">
+      <div class="stage-icon">⚖️</div>
+      <div class="stage-body">
+        <div class="stage-title">Conflict Resolver</div>
+        <div class="stage-desc">When sources disagree, newest <code style="color:#34d399">last_updated</code> wins. Future-dated evidence filtered by as-of date (2026-11-01).</div>
+      </div>
+      <div class="stage-badge">DETERMINISTIC</div>
+    </div>
+
+    <div class="connector"><div class="connector-arrow">▼</div></div>
+
+    <!-- POLICY RULES -->
+    <div class="stage theme-deterministic"
+         data-tip="enum_verdict · retention_within · certification_valid · region_includes">
+      <div class="stage-icon">📋</div>
+      <div class="stage-body">
+        <div class="stage-title">Policy Rule Engine</div>
+        <div class="stage-desc">Deterministic verdict per requirement · <span style="color:#34d399">PASS</span> / <span style="color:#ef4444">FAIL</span> / <span style="color:#94a3b8">UNKNOWN</span> / <span style="color:#fbbf24">NEEDS_REVIEW</span> · mirrors gold-label generator exactly</div>
+      </div>
+      <div class="stage-badge">DETERMINISTIC</div>
+    </div>
+
+    <div class="connector"><div class="connector-arrow">▼</div></div>
+
+    <!-- OUTPUT -->
+    <div class="stage theme-output"
+         data-tip="BLOCKED · CONDITIONAL · READY_FOR_APPROVAL">
+      <div class="stage-icon">📊</div>
+      <div class="stage-body">
+        <div class="stage-title">submission.csv</div>
+        <div class="stage-desc">Overall verdict per case · <strong style="color:#fbbf24">BLOCKED</strong> / <strong style="color:#fbbf24">CONDITIONAL</strong> / <strong style="color:#fbbf24">READY_FOR_APPROVAL</strong> · 300 test cases · Kaggle upload</div>
+      </div>
+      <div class="stage-badge">OUTPUT</div>
+    </div>
+
+  </div>
+
+  <div class="stats">
+    <div class="stat">
+      <div class="stat-value" style="color:#4d8ff5">5,020</div>
+      <div class="stat-label">Indexed Chunks</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" style="color:#c084fc">~2,400</div>
+      <div class="stat-label">Bedrock Calls</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" style="color:#34d399">10</div>
+      <div class="stat-label">Policy Requirements</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value" style="color:#fbbf24">300</div>
+      <div class="stat-label">Test Cases</div>
+    </div>
+  </div>
+
+</div>
+
+</body>
+</html>

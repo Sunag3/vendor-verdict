@@ -77,19 +77,19 @@ class RulesAdapter:
 
         if rule_name == "list_disclosed":
             return self._list_disclosed(
-                value=resolved.value,
+                records=resolved.records,
                 params=params,
             )
 
         if rule_name == "certification_valid":
             return self._certification_valid(
-                value=resolved.value,
+                records=resolved.records,
                 params=params,
             )
 
         if rule_name == "no_unresolved_incident":
             return self._no_unresolved_incident(
-                value=resolved.value,
+                records=resolved.records,
                 params=params,
             )
 
@@ -183,16 +183,48 @@ class RulesAdapter:
                 "No trusted data-region information is available."
             )
 
+        required_regions = {
+            str(r).strip().lower()
+            for r in params.get("any_of", [])
+        }
+
+        # Accept dict {"available": [...], "planned": [...]} from rules_lite format
+        if isinstance(value, dict):
+            available = {
+                str(r).strip().lower()
+                for r in value.get("available", [])
+            }
+            planned = {
+                str(r).strip().lower()
+                for r in value.get("planned", [])
+            }
+            matched = required_regions & available
+            if matched:
+                return (
+                    "PASS",
+                    "Required storage region is available: "
+                    + ", ".join(sorted(matched))
+                )
+            if required_regions & planned:
+                return (
+                    "FAIL",
+                    "Required storage region is only planned, not currently available."
+                )
+            if available:
+                return (
+                    "FAIL",
+                    "Required storage region is not present in documented regions."
+                )
+            return (
+                "UNKNOWN",
+                "No data-region information available."
+            )
+
         if not isinstance(value, list):
             return (
                 "UNKNOWN",
                 "The Data-region value has an unexpected format."
             )
-        
-        required_regions = {
-            str(region).strip().lower()
-            for region in params.get("any_of", [])
-        }
 
         actual_regions = {
             str(region).strip().lower()
@@ -225,17 +257,47 @@ class RulesAdapter:
                 "No explicit retention/deletion period is documented"
             )
 
-        if not isinstance(value, (int, float)):
-            return (
-                "UNKNOWN",
-                "The Retention value is not numeric."
-            )
-
         max_days = params.get("max_days")
         if max_days is None:
             return (
                 "UNKNOWN",
                 "retention_within requires params.max_days."
+            )
+
+        # Accept dict {"default_days": N, "deletion_on_request_days": M}
+        if isinstance(value, dict):
+            default_days = value.get("default_days")
+            on_request = value.get("deletion_on_request_days")
+
+            if default_days is not None and int(default_days) <= max_days:
+                return (
+                    "PASS",
+                    f"Default retention {default_days} days is within the {max_days}-day limit."
+                )
+            if default_days is None and on_request is not None and int(on_request) <= max_days:
+                return (
+                    "NEEDS_REVIEW",
+                    f"No default retention period; deletion on request is {on_request} days."
+                )
+            if default_days is not None and on_request is not None and int(on_request) <= max_days:
+                return (
+                    "NEEDS_REVIEW",
+                    f"Default {default_days} days exceeds limit; deletion on request ({on_request} days) is within {max_days} days."
+                )
+            if default_days is not None and on_request is None:
+                return (
+                    "NEEDS_REVIEW",
+                    f"Default retention {default_days} days exceeds the {max_days}-day limit; no deletion-on-request period documented."
+                )
+            return (
+                "FAIL",
+                f"Documented retention exceeds the {max_days}-day limit."
+            )
+
+        if not isinstance(value, (int, float)):
+            return (
+                "UNKNOWN",
+                "The Retention value is not numeric."
             )
 
         if value <= max_days:

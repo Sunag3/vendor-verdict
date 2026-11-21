@@ -39,3 +39,17 @@ def evaluate_requirement(
         )
     except ValueError as exc:
         raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@router.post("/{case_id}")
+def evaluate_case(
+        case_id: str,
+        top_k: int = Query(default=8, ge=1, le=20),
+):
+    try:
+        return get_evaluation_service().evaluate_case(
+            case_id=case_id,
+            top_k=top_k,
+        )
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
